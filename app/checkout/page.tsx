@@ -45,8 +45,8 @@ export default function CheckoutPage() {
     if (!name || !email || !address) return alert('Please fill in all fields.')
 
     // --- Split local vs cloudprint items
-    const localItems = cart.filter((item) => item.source !== 'cloudprint')
-    const cloudItems = cart.filter((item) => item.source === 'cloudprint')
+    const localItems = cart.filter((item) => item.source !== 'cloud')
+    const cloudItems = cart.filter((item) => item.source === 'cloud')
 
     // --- Save everything to Supabase
     const { error } = await supabase.from('orders').insert([
@@ -118,7 +118,7 @@ export default function CheckoutPage() {
           <li key={item.id} className="flex justify-between mb-2">
             <span>
               {item.name} × {item.quantity}{' '}
-              {item.source === 'cloudprint' && (
+              {item.source === 'cloud' && (
                 <span className="text-xs text-purple-600">(Cloudprint)</span>
               )}
             </span>

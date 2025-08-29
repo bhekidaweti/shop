@@ -47,6 +47,8 @@ export default function AdminProductUpload() {
         description,
         price: parseFloat(price),
         image,
+        special: isSpecial,
+        source: 'local',
       }
 
       if (editingProductId !== null) {

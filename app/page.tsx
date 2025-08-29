@@ -109,12 +109,12 @@ export default function HomePage() {
                 />
                 <h3 className="font-semibold">{product.name}</h3>
                 <p className="text-sm text-gray-600">{product.description}</p>
-                <p className="text-blue-600 font-bold mt-2">
+                <p className="text-gray-600 font-bold mt-2">
                   R{product.price.toFixed(2)}
                 </p>
                 <button
                   onClick={() => handleAdd(product)}
-                  className="mt-auto bg-maroon-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="mt-auto bg-maroon-600 text-white px-4 py-2 rounded hover:bg-green-700"
                 >
                   Add to Cart
                 </button>
@@ -127,7 +127,7 @@ export default function HomePage() {
       <div className="text-center">
         <Link
           href="/shop"
-          className="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          className="inline-block bg-gray-600 text-white px-6 py-2 rounded hover:bg-green-700"
         >
           Explore More Wines
         </Link>

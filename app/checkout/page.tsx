@@ -40,40 +40,66 @@ export default function CheckoutPage() {
     }
   }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  if (!name || !email || !address) return alert('Please fill in all fields.')
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!name || !email || !address) return alert('Please fill in all fields.')
 
-  // Save order to Supabase
-  const { error } = await supabase.from('orders').insert([
-    {
-      name,
-      email,
-      address,
-      items: cart,
-      total,
-    },
-  ])
+    // --- Split local vs cloudprint items
+    const localItems = cart.filter((item) => item.source !== 'cloudprint')
+    const cloudItems = cart.filter((item) => item.source === 'cloudprint')
 
-  if (error) {
-    console.error('Supabase insert error:', error)
-    return alert('Something went wrong saving your order.')
+    // --- Save everything to Supabase
+    const { error } = await supabase.from('orders').insert([
+      {
+        name,
+        email,
+        address,
+        items: cart,
+        total,
+      },
+    ])
+
+    if (error) {
+      console.error('Supabase insert error:', error)
+      return alert('Something went wrong saving your order.')
+    }
+
+    // --- If Cloudprint items exist, send to Cloudprinter API
+    if (cloudItems.length > 0) {
+      try {
+        const resp = await fetch('/api/checkout-cloudprint', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer: { name, email, address },
+            items: cloudItems,
+          }),
+        })
+
+        if (!resp.ok) {
+          console.error('Cloudprint order error:', await resp.text())
+          alert('Something went wrong placing the Cloudprint order.')
+          return
+        }
+      } catch (err) {
+        console.error('Cloudprint fetch error:', err)
+        alert('Cloudprint order request failed.')
+        return
+      }
+    }
+
+    // --- Send confirmation email
+    await notifyOrder({ name, email, address, items: cart, total })
+
+    // --- Redirect to PayFast
+    const params = new URLSearchParams({
+      amount: total.toFixed(2),
+      item_name: 'Your Cart',
+    })
+
+    window.location.href = `/api/payfast?${params.toString()}`
   }
 
-  // Send confirmation email
-  await notifyOrder({ name, email, address, items: cart, total })
-
-  // Redirect to PayFast
-  const params = new URLSearchParams({
-    amount: total.toFixed(2),
-    item_name: 'Your Cart',
-  })
-
-  window.location.href = `/api/payfast?${params.toString()}`
-}
-
-
-  // ✅ Move success screen here (outside the submit handler)
   if (success) {
     return (
       <div className="max-w-xl mx-auto py-10 text-center">
@@ -91,7 +117,10 @@ export default function CheckoutPage() {
         {cart.map((item) => (
           <li key={item.id} className="flex justify-between mb-2">
             <span>
-              {item.name} × {item.quantity}
+              {item.name} × {item.quantity}{' '}
+              {item.source === 'cloudprint' && (
+                <span className="text-xs text-purple-600">(Cloudprint)</span>
+              )}
             </span>
             <span>R {item.price * item.quantity}</span>
           </li>
@@ -131,3 +160,4 @@ export default function CheckoutPage() {
     </main>
   )
 }
+

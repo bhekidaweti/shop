@@ -4,7 +4,8 @@ export interface CartItem {
   price: number
   image?: string
   quantity: number
-  special?: boolean 
+  special?: boolean
+  source?: 'local' | 'cloud' 
 }
 interface CartContextType {
   cart: CartItem[]
